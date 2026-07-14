@@ -9,3 +9,4 @@ data/processed/*
 !data/processed/scored_predictions.csv
 models/*
 !models/.gitkeep
+.streamlit/secrets.toml

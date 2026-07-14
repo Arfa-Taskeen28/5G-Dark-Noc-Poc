@@ -1,7 +1,7 @@
 """Agentic NOC Copilot (L3) — Decide + Act layer on top of the L2 detection pipeline.
 
-Public surface used by the FastAPI backend (`api/main.py`) and the Streamlit UI
-(`app/dashboard.py`):
+Called in-process directly by the Streamlit UI (`app/dashboard.py`) — no separate
+backend service:
 
     from src.agent import IncidentStore, diagnose_incident, decide, apply_remediation, chat
     from src.agent.schemas import Incident, Diagnosis, AuditRecord
@@ -10,7 +10,7 @@ Public surface used by the FastAPI backend (`api/main.py`) and the Streamlit UI
 from src.agent.schemas import Incident, Diagnosis, AuditRecord, RemediationDecision
 from src.agent.store import IncidentStore
 from src.agent.copilot import diagnose_incident, chat
-from src.agent.remediation import decide, apply_remediation, heal_kpi_series
+from src.agent.remediation import decide, apply_remediation
 
 __all__ = [
     "Incident",
@@ -22,5 +22,4 @@ __all__ = [
     "chat",
     "decide",
     "apply_remediation",
-    "heal_kpi_series",
 ]
