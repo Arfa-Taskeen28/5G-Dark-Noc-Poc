@@ -136,11 +136,17 @@ with tab_copilot:
         }
         incidents = sorted(incidents, key=lambda i: status_priority.get(i.status, 5))
 
-        options = {
-            f"{i.site_id} · {i.dominant_kpi} · {i.fault_signature} · [{i.status}]": i.id for i in incidents
+        incident_ids = [i.id for i in incidents]
+        labels = {
+            i.id: f"{i.site_id} · {i.dominant_kpi} · {i.fault_signature} · [{i.status}]" for i in incidents
         }
-        selected_label = st.selectbox("Incident", list(options.keys()))
-        incident = store.get(options[selected_label])
+        selected_id = st.selectbox(
+            "Incident",
+            incident_ids,
+            format_func=lambda incident_id: labels[incident_id],
+            key="incident_selectbox",
+        )
+        incident = store.get(selected_id)
 
         col_a, col_b = st.columns([2, 1])
 
