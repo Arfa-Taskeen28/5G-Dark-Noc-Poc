@@ -17,6 +17,11 @@ from src.agent import playbooks
 from src.agent.schemas import Diagnosis, Incident
 from src.config import NOC_AGENT_MODEL
 
+# Fail fast into demo mode rather than let a slow network hold a live rerun open
+# indefinitely -- long-hanging requests are what tend to trigger a hosting
+# platform's own connection/proxy timeout and silently reset the session.
+REQUEST_TIMEOUT_SECONDS = 20.0
+
 DIAGNOSIS_TOOL = {
     "name": "submit_diagnosis",
     "description": "Submit a structured root-cause diagnosis for a network incident.",
@@ -91,7 +96,7 @@ def diagnose_incident(incident: Incident) -> Diagnosis:
     try:
         import anthropic
 
-        client = anthropic.Anthropic(api_key=api_key)
+        client = anthropic.Anthropic(api_key=api_key, timeout=REQUEST_TIMEOUT_SECONDS)
         response = client.messages.create(
             model=NOC_AGENT_MODEL,
             max_tokens=1024,
@@ -128,7 +133,7 @@ def chat(incident: Incident, diagnosis: Optional[Diagnosis], question: str, hist
     try:
         import anthropic
 
-        client = anthropic.Anthropic(api_key=api_key)
+        client = anthropic.Anthropic(api_key=api_key, timeout=REQUEST_TIMEOUT_SECONDS)
         context = _incident_context(incident)
         if diagnosis:
             context += (

@@ -141,14 +141,26 @@ with tab_copilot:
 
         incident_ids = [i.id for i in incidents]
         labels = {
-            i.id: f"{i.site_id} · {i.dominant_kpi} · {i.fault_signature} · [{i.status}]" for i in incidents
+            i.id: f"{i.site_id} · {i.dominant_kpi} · {i.fault_signature} · {i.timestamp} · [{i.status}]"
+            for i in incidents
         }
+
+        # Persist the selection in the URL, not just session state: a slow live-Claude
+        # call can trigger a browser/session reset, which wipes session state but not
+        # the URL. Without this, a reset silently snaps back to index 0 -- and since
+        # several incidents can share an identical label, that looks like "the
+        # diagnosis vanished" when it's actually still saved, just no longer selected.
+        query_incident_id = st.query_params.get("incident_id")
+        default_index = incident_ids.index(query_incident_id) if query_incident_id in incident_ids else 0
+
         selected_id = st.selectbox(
             "Incident",
             incident_ids,
             format_func=lambda incident_id: labels[incident_id],
+            index=default_index,
             key="incident_selectbox",
         )
+        st.query_params["incident_id"] = selected_id
         incident = store.get(selected_id)
 
         col_a, col_b = st.columns([2, 1])
