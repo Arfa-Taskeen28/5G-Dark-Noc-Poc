@@ -11,6 +11,8 @@ from __future__ import annotations
 
 import json
 import os
+import sys
+import traceback
 from typing import List, Optional, Tuple
 
 from src.agent import playbooks
@@ -115,6 +117,8 @@ def diagnose_incident(incident: Incident) -> Diagnosis:
         data = tool_use.input
         return Diagnosis(**data, source="claude")
     except Exception:
+        print("[AURA] diagnose_incident live call failed:", file=sys.stderr)
+        traceback.print_exc(file=sys.stderr)
         return _demo_diagnosis(incident)
 
 
@@ -161,6 +165,8 @@ def chat(incident: Incident, diagnosis: Optional[Diagnosis], question: str, hist
         )
         return "".join(b.text for b in response.content if b.type == "text")
     except Exception:
+        print("[AURA] chat live call failed:", file=sys.stderr)
+        traceback.print_exc(file=sys.stderr)
         return "Live chat is unavailable right now. Falling back: " + (
             diagnosis.recommended_action if diagnosis else "no diagnosis available yet."
         )
