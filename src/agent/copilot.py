@@ -142,9 +142,11 @@ def chat(incident: Incident, diagnosis: Optional[Diagnosis], question: str, hist
                 f"Risk: {diagnosis.risk_level}, confidence: {diagnosis.confidence:.2f}"
             )
 
-        messages = [{"role": "user", "content": f"Incident context:\n{context}"}]
-        for role, text in history:
-            messages.append({"role": role, "content": text})
+        # messages must strictly alternate user/assistant with no repeats -- the
+        # incident context goes in the system prompt instead of a leading user
+        # message, so `messages` is just the (already-alternating) history plus
+        # the new question.
+        messages = [{"role": role, "content": text} for role, text in history]
         messages.append({"role": "user", "content": question})
 
         response = client.messages.create(
@@ -152,7 +154,8 @@ def chat(incident: Incident, diagnosis: Optional[Diagnosis], question: str, hist
             max_tokens=512,
             system=(
                 "You are AURA, a network operations copilot. Answer the engineer's question about "
-                "this specific incident, grounded only in the provided context. Be concise and precise."
+                "this specific incident, grounded only in the provided context. Be concise and precise.\n\n"
+                f"Incident context:\n{context}"
             ),
             messages=messages,
         )
