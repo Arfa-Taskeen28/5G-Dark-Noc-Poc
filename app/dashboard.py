@@ -31,8 +31,11 @@ def load_data():
     return pd.read_csv(DATA_PATH, parse_dates=["timestamp"])
 
 
-@st.cache_resource
 def get_store():
+    # Not cached: constructing this is a cheap JSON-file read, and doing it fresh
+    # on every rerun guarantees we always see the latest on-disk state written
+    # by the previous run (every store mutation saves immediately) rather than
+    # depending on an in-process singleton surviving correctly across reruns.
     return IncidentStore()
 
 
@@ -201,8 +204,10 @@ with tab_copilot:
                 for role, text in st.session_state[history_key]:
                     st.chat_message("user" if role == "user" else "assistant").write(text)
 
-                question = st.chat_input("Ask a question about this incident", key=f"chat_input_{incident.id}")
-                if question:
+                with st.form(key=f"chat_form_{incident.id}", clear_on_submit=True):
+                    question = st.text_input("Ask a question about this incident")
+                    submitted = st.form_submit_button("Ask")
+                if submitted and question:
                     answer = chat(incident, diagnosis, question, st.session_state[history_key])
                     st.session_state[history_key].append(("user", question))
                     st.session_state[history_key].append(("assistant", answer))
